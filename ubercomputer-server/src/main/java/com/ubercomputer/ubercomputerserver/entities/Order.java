@@ -386,7 +386,7 @@ public class Order {
 
 	@Override
 	public String toString() {
-		return "ORDER DATA\n\n" + "id=" + id + "\nexpressService=" + expressService + "\nsubtotal=" + subtotal + "\nserviceFee="
+		return "ORDER DATA\n\n" + "id=" + id + "\n\nexpressService=" + expressService + "\nsubtotal=" + subtotal + "\nserviceFee="
 				+ serviceFee + "\nbuildingFee=" + buildingFee + "\ngrandTotal=" + grandTotal + "\ndateTimeSubmitted=" + dateTimeSubmitted
 				+ "\ndeadlineForReadyForDelivery=" + deadlineForReadyForDelivery + "\nstatus=" + status + "\n\nUSER DATA\n\n"
 				+ user + "\n\nSELECTEDPARTS" + "\n\noperatingSystem=" + operatingSystem + "\ncomputerCase=" + computerCase + "\nmotherboard="
