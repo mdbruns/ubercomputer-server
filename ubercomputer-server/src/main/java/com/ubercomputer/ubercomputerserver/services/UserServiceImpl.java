@@ -1,15 +1,20 @@
 package com.ubercomputer.ubercomputerserver.services;
 
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.UUID;
 
-import javax.mail.internet.MimeMessage;
+import com.sendgrid.Method;
+import com.sendgrid.Request;
+import com.sendgrid.Response;
+import com.sendgrid.SendGrid;
+import com.sendgrid.helpers.mail.Mail;
+import com.sendgrid.helpers.mail.objects.Content;
+import com.sendgrid.helpers.mail.objects.Email;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -29,10 +34,7 @@ public class UserServiceImpl implements UserService {
  	private UserDAO userDAO;
 	
 	@Autowired
-	private JwtTokenProvider jwtTokenProvider;
-	
-	@Autowired
-	private JavaMailSender sender; 
+	private JwtTokenProvider jwtTokenProvider; 
 	
 	@Override
 	public Object[] login(String email, String password) {
@@ -119,14 +121,28 @@ public class UserServiceImpl implements UserService {
 				int tokenId = userDAO.savePasswordResetToken(newToken);
 				
 				try {
-					MimeMessage message = sender.createMimeMessage();
-			        MimeMessageHelper helper = new MimeMessageHelper(message, true);
-			         
-			        helper.setTo(email);
-			        helper.setText("To continue with the password reset process please click " + "<a href=\"http://localhost:3000/reset/" + requestingUser.getId() + "/" + tokenId + "/" + token + "\">this link.</a>", true);
-			        helper.setSubject("Übercomputer -- Password Reset Link");
-			         
-			        sender.send(message);
+					Email from = new Email("matt.ubercomputer@gmail.com");
+				    String subject = "Übercomputer -- Password Reset Link";
+				    Email to = new Email(email);
+				    Content content = new Content("text/html", "<html><body>To continue with the password reset "
+				    		+ "process please click <a href=\"http://ubercomputer.herokuapp.com/reset/" + requestingUser.getId() + "/" + tokenId + "/" + token + "\">this link.</a></body></html>");
+				    
+				    Mail mail = new Mail(from, subject, to, content);
+				    SendGrid sg = new SendGrid(System.getenv("SENDGRID_API_KEY"));
+				    Request request = new Request();
+				    
+				    try {
+				      request.setMethod(Method.POST);
+				      request.setEndpoint("mail/send");
+				      request.setBody(mail.build());
+				      Response response = sg.api(request);
+				      System.out.println(response.getStatusCode());
+				      System.out.println(response.getBody());
+				      System.out.println(response.getHeaders());
+				    } 
+				    catch (IOException ex) {
+				    	throw ex;		    
+				    }
 				}
 				catch (Exception e) {
 					throw new CustomException("Something went wrong on our end while sending the password reset link to your email. Please try again in a minute or contact us to report the problem.", HttpStatus.INTERNAL_SERVER_ERROR);
